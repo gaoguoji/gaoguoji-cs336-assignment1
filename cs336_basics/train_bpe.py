@@ -3,6 +3,8 @@ from collections import defaultdict
 from typing import Dict, Set
 
 import regex
+import json 
+from tests.common import gpt2_bytes_to_unicode
 
 def word_has_pair(
         word_bytes_tuple : tuple[bytes],
@@ -65,8 +67,7 @@ def train_bpe(
             words_set.add(sp_token_bytes)
             vocab[cur_token_id] = sp_token_bytes
             cur_token_id += 1
-    print("当前工作目录:", os.getcwd())
-    print("文件是否存在:", os.path.exists(input_path))
+
     with open(input_path, "r", encoding="utf-8", errors="ignore") as f:
         corpus = f.read()
 
@@ -118,8 +119,13 @@ def train_bpe(
     return vocab, merges    
     
 if __name__ == "__main__":
-   special_tokens = ["<|endoftext|>"]
-   input_path = "tests/fixtures/tinystories_sample.txt"
-   vocab, merges = train_bpe(input_path, 500, special_tokens) 
-   print(f"vocab is {vocab}")
-   print(f"merges is {merges}")
+    special_tokens = ["<|endoftext|>"]
+    input_path = "tests/fixtures/tinystories_sample_5M.txt"
+    vocab, merges = train_bpe(input_path, 500, special_tokens) 
+    print(f"vocab is {vocab}")
+    print(f"merges is {merges}")
+    vocab_w = {"".join([gpt2_bytes_to_unicode()[ch] for ch in v]): k for k, v in vocab.items()}
+    with open("tests/fixtures/train-bpe-tinystories_sample_5M-vocab.json", 'w', encoding='utf-8') as fp: 
+        json.dump(vocab_w, fp, ensure_ascii=False, indent=4)
+    
+   
