@@ -122,10 +122,10 @@ if __name__ == "__main__":
     special_tokens = ["<|endoftext|>"]
     input_path = "tests/fixtures/tinystories_sample_5M.txt"
     vocab, merges = train_bpe(input_path, 500, special_tokens) 
-    print(f"vocab is {vocab}")
+    #print(f"vocab is {vocab}")
     print(f"merges is {merges}")
-    vocab_w = {"".join([gpt2_bytes_to_unicode()[ch] for ch in v]): k for k, v in vocab.items()}
-    with open("tests/fixtures/train-bpe-tinystories_sample_5M-vocab.json", 'w', encoding='utf-8') as fp: 
-        json.dump(vocab_w, fp, ensure_ascii=False, indent=4)
+    # vocab_w = {"".join([gpt2_bytes_to_unicode()[ch] for ch in v]): k for k, v in vocab.items()}
+    # with open("tests/fixtures/train-bpe-tinystories_sample_5M-vocab.json", 'w', encoding='utf-8') as fp: 
+    #     json.dump(vocab_w, fp, ensure_ascii=False, indent=4)
     
    

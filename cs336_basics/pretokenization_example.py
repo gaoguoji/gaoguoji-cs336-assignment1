@@ -16,21 +16,21 @@ def find_chunk_boundaries(
     # Get total file size in bytes
     file.seek(0, os.SEEK_END)
     file_size = file.tell()
-    file.seek(0)
+    file.seek(0) # 得到整个文件的大小后重新返回文件开头
 
     chunk_size = file_size // desired_num_chunks
 
     # Initial guesses for chunk boundary locations, uniformly spaced
     # Chunks start on previous index, don't include last index
-    chunk_boundaries = [i * chunk_size for i in range(desired_num_chunks + 1)]
-    chunk_boundaries[-1] = file_size
+    chunk_boundaries = [i * chunk_size for i in range(desired_num_chunks + 1)] 
+    chunk_boundaries[-1] = file_size  # 初始化所有的文件边界，一共 num_chunks + 1 个，从0到file_size,中间间隔chunk_size
 
     mini_chunk_size = 4096  # Read ahead by 4k bytes at a time
 
     for bi in range(1, len(chunk_boundaries) - 1):
         initial_position = chunk_boundaries[bi]
         file.seek(initial_position)  # Start at boundary guess
-        while True:
+        while True: #每次向前读mini_chunk个字节，查看其中有无special_token，如果有以其位置作为本次边界，如果没有继续向前.直到结尾
             mini_chunk = file.read(mini_chunk_size)  # Read a mini chunk
 
             # If EOF, this boundary should be at the end of the file
@@ -40,24 +40,24 @@ def find_chunk_boundaries(
 
             # Find the special token in the mini chunk
             found_at = mini_chunk.find(split_special_token)
-            if found_at != -1:
+            if found_at != -1: # 如果向前mini_chunk_size字节之后有special_token将其位置作为边界
                 chunk_boundaries[bi] = initial_position + found_at
                 break
             initial_position += mini_chunk_size
 
     # Make sure all boundaries are unique, but might be fewer than desired_num_chunks
-    return sorted(set(chunk_boundaries))
+    return sorted(set(chunk_boundaries)) #中间有串位置也不要紧，因为boundary一定是special_tokens位置，只要去虫并保序即可
 
 
-## Usage
-with open(..., "rb") as f:
-    num_processes = 4
-    boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
+# ## Usage
+# with open(..., "rb") as f:
+#     num_processes = 4
+#     boundaries = find_chunk_boundaries(f, num_processes, b"<|endoftext|>")
 
-    # The following is a serial implementation, but you can parallelize this
-    # by sending each start/end pair to a set of processes.
-    for start, end in zip(boundaries[:-1], boundaries[1:]):
-        f.seek(start)
-        chunk = f.read(end - start).decode("utf-8", errors="ignore")
-        # Run pre-tokenization on your chunk and store the counts for each pre-token
-        # git test
+#     # The following is a serial implementation, but you can parallelize this
+#     # by sending each start/end pair to a set of processes.
+#     for start, end in zip(boundaries[:-1], boundaries[1:]):
+#         f.seek(start)
+#         chunk = f.read(end - start).decode("utf-8", errors="ignore")
+#         # Run pre-tokenization on your chunk and store the counts for each pre-token
+#         # git test

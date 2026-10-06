@@ -6,6 +6,7 @@ import regex
 from tests.common import gpt2_bytes_to_unicode
 
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
+pat_re = regex.compile(PAT)
 
 class Tokenizer:
     def __init__(self, 
@@ -50,14 +51,14 @@ class Tokenizer:
             paragraphs = [text] 
         else :
             sorted_special_tokens = sorted(self.special_tokens, key=len, reverse=True)
-            paragraphs = regex.split(f'({'|'.join(map(regex.escape, sorted_special_tokens))})', text)
+            paragraphs = regex.split(f'({'|'.join(map(regex.escape, sorted_special_tokens))})', text) #split时用正则分组，则会保留分割符本身
         for paragraph in paragraphs:
             if self.special_tokens and paragraph in self.special_tokens:
                 result.append(self.vocab_bytes_id[paragraph.encode('utf-8')])
             else :
-                words = regex.findall(PAT, paragraph)
-                word_bytes_list = [word.encode('utf-8') for word in words]
-                for word_bytes in word_bytes_list:
+                for match in regex.finditer(pat_re, paragraph):
+                    word = match.group(0) 
+                    word_bytes = word.encode('utf-8')
                     result.extend(self.encode_text(word_bytes)) 
         return result
     

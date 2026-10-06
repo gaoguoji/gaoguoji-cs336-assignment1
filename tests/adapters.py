@@ -8,9 +8,10 @@ import numpy.typing as npt
 import torch
 from jaxtyping import Bool, Float, Int
 from torch import Tensor
-from cs336_basics.train_bpe import train_bpe 
+from cs336_basics.train_bpe_mp import train_bpe 
 from cs336_basics.tokenizer import Tokenizer
-from cs336_basics.nn_block import Linear, EmbeddingLayer, RMSNorm, SwiGlu, RoPE, softmax, ScaledDotProductAttention, MultiheadSelfAttention, MultiheadSelfAttentionRoPE, Transformer_Block, TransformerLm 
+from cs336_basics.nn_block import Linear, EmbeddingLayer, RMSNorm, SwiGlu, RoPE, softmax, ScaledDotProductAttention, MultiheadSelfAttention, MultiheadSelfAttentionRoPE, Transformer_Block, TransformerLm
+from cs336_basics.nn_utils import cross_entropy, AdamW, cosine_annealing_schedule, l2_norm_clip, data_load 
 
 def run_linear(
     d_in: int,
@@ -469,7 +470,8 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    raise NotImplementedError
+    return data_load(dataset, batch_size, context_length, device)
+    # raise NotImplementedError
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
@@ -503,8 +505,9 @@ def run_cross_entropy(
 
     Returns:
         Float[Tensor, ""]: The average cross-entropy loss across examples.
-    """
-    raise NotImplementedError
+    """ 
+    return cross_entropy(inputs, targets)
+    # raise NotImplementedError
 
 
 def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float) -> None:
@@ -515,15 +518,17 @@ def run_gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm:
         max_l2_norm (float): a positive value containing the maximum l2-norm.
 
     The gradients of the parameters (parameter.grad) should be modified in-place.
-    """
+    """ 
+    return l2_norm_clip(parameters, max_l2_norm, max_l2_norm)
     raise NotImplementedError
 
 
 def get_adamw_cls() -> Any:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
-    """
-    raise NotImplementedError
+    """ 
+    return AdamW
+    # raise NotImplementedError
 
 
 def run_get_lr_cosine_schedule(
@@ -550,8 +555,9 @@ def run_get_lr_cosine_schedule(
 
     Returns:
         Learning rate at the given iteration under the specified schedule.
-    """
-    raise NotImplementedError
+    """ 
+    return cosine_annealing_schedule(it, warmup_iters, cosine_cycle_iters, min_learning_rate, max_learning_rate)
+    # raise NotImplementedError
 
 
 def run_save_checkpoint(
